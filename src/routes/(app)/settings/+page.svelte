@@ -80,7 +80,7 @@
 	});
 </script>
 
-<div class="space-y-4">
+<div class="mx-auto max-w-lg space-y-4">
 	<div>
 		<h1 class="text-2xl font-semibold tracking-tight md:text-3xl">Settings</h1>
 		<p class="text-sm text-muted-foreground md:text-base">Notification preferences and account</p>
@@ -121,7 +121,9 @@
 					<input type="hidden" name="pushEnabled" value={pushEnabled ? 'true' : 'false'} />
 					<Label for="pushEnabled" class="font-normal">Allow push notifications</Label>
 				</div>
-				<Button type="submit" class="w-full">Save preferences</Button>
+				<div class="flex justify-end pt-1">
+					<Button type="submit" class="w-full sm:w-auto">Save preferences</Button>
+				</div>
 			</form>
 
 			<Separator class="my-4" />
@@ -132,10 +134,10 @@
 					Enable browser push to get watering reminders even when LeafBuddy isn't open.
 				</p>
 				<div class="flex gap-2">
-					<Button onclick={enablePush} disabled={pushLoading || !isPushSupported()} class="flex-1">
+					<Button onclick={enablePush} disabled={pushLoading || !isPushSupported()} class="flex-1 sm:flex-initial sm:w-auto">
 						Enable push
 					</Button>
-					<Button onclick={disablePush} disabled={pushLoading} variant="outline" class="flex-1">
+					<Button onclick={disablePush} disabled={pushLoading} variant="outline" class="flex-1 sm:flex-initial sm:w-auto">
 						Disable push
 					</Button>
 				</div>
@@ -146,7 +148,7 @@
 						variant="outline"
 						size="sm"
 						disabled={pushLoading || !pushEnabled || !isPushSupported()}
-						class="w-full"
+						class="w-full sm:w-auto"
 					>
 						Send test notification
 					</Button>
@@ -164,7 +166,7 @@
 		</CardHeader>
 		<CardContent>
 			<form method="POST" action="?/signOut" use:enhance>
-				<Button type="submit" variant="destructive" class="w-full">
+				<Button type="submit" variant="destructive" class="w-full sm:w-auto">
 					<LogOutIcon class="size-4" />
 					Sign out
 				</Button>

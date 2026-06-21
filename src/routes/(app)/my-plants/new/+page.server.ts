@@ -15,6 +15,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 		species: species.map((s) => ({
 			id: s.id,
 			name: s.name,
+			scientificName: s.scientificName ?? null,
 			recommendedWateringIntervalDays: s.recommendedWateringIntervalDays
 		})),
 		preselectedId,

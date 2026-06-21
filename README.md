@@ -1,42 +1,127 @@
-# sv
+# LeafBuddy 🌱
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+**LeafBuddy** is a friendly, lightweight plant care companion app. Track your plants, manage watering schedules, capture progress photos, and receive timely reminders (including push notifications) so your green friends thrive.
 
-## Creating a project
+Built as a modern full-stack SvelteKit application with an emphasis on delightful mobile-first UX that also shines on desktop.
 
-If you're seeing this, you've probably already done this step. Congrats!
+## ✨ Features
 
+- **My Plants Dashboard**
+  - At-a-glance cards with photo carousels (cover + progress shots)
+  - Watering status with smart badges (Overdue / Due today)
+  - "Mark as watered" button that's only active when it's time
+  - Quick add photos, edit plant details & schedule
+
+- **Watering Intelligence**
+  - Use recommended intervals or set custom schedules + preferred time
+  - Schedule editor lives inside the pencil edit dialog (clean cards)
+  - Automatic next-water calculation
+
+- **Progress & Photos**
+  - Add and remove progress photos directly from plant cards
+  - Carousel navigation with arrows + dots (desktop-friendly)
+
+- **Catalog & Discovery**
+  - Browse community plant species
+  - Add your own species (with images)
+
+- **Notifications & Reminders**
+  - In-app notifications
+  - Browser push notifications for due plants
+  - Settings to control what you receive
+
+- **Other Nice Touches**
+  - Responsive design (excellent on mobile, polished desktop layouts)
+  - PWA support
+  - Clean, accessible UI components
+
+## 🛠 Tech Stack
+
+- **SvelteKit** + TypeScript
+- **Tailwind CSS** + custom UI components (built on bits-ui)
+- **Drizzle ORM** + MySQL
+- **Lucide icons**
+- Push notifications via Web Push API
+- Auth (session-based)
+- Vite + adapter-node for deployment
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- MySQL-compatible database
+
+### 1. Clone & Install
 ```sh
-# create a new project
-npx sv create my-app
+git clone <your-repo-url>
+cd LeafBuddy
+npm install
 ```
 
-To recreate this project with the same configuration:
-
-```sh
-# recreate this project
-npx sv@0.16.1 create --template minimal --types ts --add tailwindcss="plugins:none" eslint prettier sveltekit-adapter="adapter:node" --install npm LeafBuddy
+### 2. Environment
+Create a `.env` file (see `.env.example` if present) with at least:
+```env
+DATABASE_URL="mysql://user:password@localhost:3306/leafbuddy"
+# Optional: other secrets for auth, push keys, etc.
 ```
 
-## Developing
+### 3. Database
+```sh
+# Push schema (development)
+npm run db:push
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+# Or generate + migrate
+npm run db:generate
+npm run db:migrate
 
+# Seed some plant species (optional but recommended)
+npm run db:seed
+```
+
+### 4. Run the App
 ```sh
 npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
 ```
 
-## Building
+Visit [http://localhost:5173](http://localhost:5173). Register or log in and start adding plants!
 
-To create a production version of your app:
+### Useful Scripts
+| Script            | Description                          |
+|-------------------|--------------------------------------|
+| `npm run dev`     | Start dev server                     |
+| `npm run build`   | Production build                     |
+| `npm run preview` | Preview production build             |
+| `npm run check`   | Type check + Svelte check            |
+| `npm run db:studio` | Open Drizzle Studio for DB inspection |
+| `npm run lint`    | Lint + format check                  |
+| `npm run format`  | Auto-format code                     |
 
-```sh
-npm run build
-```
+## 📦 Deployment
 
-You can preview the production build with `npm run preview`.
+The app uses `@sveltejs/adapter-node`.
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+1. Build: `npm run build`
+2. Set `DATABASE_URL` (and any other required env vars) on your host.
+3. Run the server: `node build` (or use your platform's start command).
+
+Works great on Railway, Render, Fly.io, a VPS, etc.
+
+## 🧪 Development Notes
+
+- Recent major UX improvements include:
+  - Desktop-friendly carousels + image management
+  - Proper confirmation modals (no more `window.confirm`)
+  - Responsive settings page
+  - Gated watering action + schedule editor consolidated into edit dialog
+- Database changes live in `src/lib/server/db/schema.ts`
+- Push notification logic: see `src/lib/server/push.ts` and the cron job
+
+## 📝 License
+
+MIT (or whatever you choose)
+
+---
+
+Made with care for plant parents. 🌿
+
+Happy growing!

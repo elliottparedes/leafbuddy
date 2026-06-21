@@ -3,8 +3,10 @@ import type { Actions, PageServerLoad } from './$types';
 import { failIfError } from '$lib/server/actions/handle-result';
 import { plantService } from '$lib/server/services/plant-service';
 
-export const load: PageServerLoad = async ({ parent }) => {
+export const load: PageServerLoad = async ({ parent, url }) => {
 	await parent();
+	const initialName = url.searchParams.get('name') ?? '';
+	return { initialName };
 };
 
 export const actions: Actions = {

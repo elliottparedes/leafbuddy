@@ -124,11 +124,18 @@
 				{#each navItems as item (item.href)}
 					<a
 						href={item.href}
-						class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors {isActive(item.href)
+						class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors {isActive(item.href)
 							? 'bg-primary/10 text-primary'
 							: 'text-muted-foreground hover:bg-muted hover:text-foreground'}"
 					>
-						<item.icon class="size-4.5" />
+						<div class="relative">
+							<item.icon class="size-4.5" />
+							{#if item.href === '/notifications' && data.unreadCount > 0}
+								<span class="absolute -top-0.5 -right-0.5 flex size-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-medium text-primary-foreground ring-1 ring-background">
+									{data.unreadCount > 9 ? '9+' : data.unreadCount}
+								</span>
+							{/if}
+						</div>
 						<span>{item.label}</span>
 					</a>
 				{/each}
@@ -143,24 +150,6 @@
 
 	<!-- Main content area -->
 	<div class="flex-1 flex flex-col min-w-0">
-		<!-- Slim desktop top bar (standard) -->
-		<header class="h-14 border-b border-border/60 bg-background/95 backdrop-blur flex items-center justify-end px-6 shrink-0">
-			<a
-				href="/notifications"
-				class="relative inline-flex size-9 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-				aria-label="Notifications"
-			>
-				<BellIcon class="size-4.5" />
-				{#if data.unreadCount > 0}
-					<Badge
-						class="absolute -top-0.5 -right-0.5 flex size-4.5 items-center justify-center rounded-full p-0 text-[10px]"
-					>
-						{data.unreadCount > 9 ? '9+' : data.unreadCount}
-					</Badge>
-				{/if}
-			</a>
-		</header>
-
 		<main class="flex-1 p-6 lg:p-8 overflow-auto">
 			{@render children()}
 		</main>

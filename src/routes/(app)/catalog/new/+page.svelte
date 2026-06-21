@@ -13,8 +13,9 @@
 	} from '$lib/components/ui/select/index.js';
 	import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
 
-	let { form }: { form: ActionData } = $props();
+	let { data, form }: { data: { initialName?: string }; form: ActionData } = $props();
 
+	let name = $state(data.initialName || '');
 	let lightRequirement = $state('bright_indirect');
 </script>
 
@@ -37,7 +38,7 @@
 			<form method="POST" enctype="multipart/form-data" class="space-y-4">
 				<div class="space-y-2">
 					<Label for="name">Common name</Label>
-					<Input id="name" name="name" required />
+					<Input id="name" name="name" bind:value={name} required />
 				</div>
 				<div class="space-y-2">
 					<Label for="scientificName">Scientific name</Label>

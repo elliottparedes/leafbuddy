@@ -135,6 +135,93 @@ export const plantService = {
 		return { ok: true, data: { id: speciesId } };
 	},
 
+	async updateSpeciesFromForm(
+		userId: string,
+		speciesId: string,
+		formData: FormData
+	): Promise<ServiceResult<{ id: string }>> {
+		const species = await plantRepository.findSpeciesById(speciesId);
+		if (!species) {
+			return { ok: false, message: 'Species not found.' };
+		}
+
+		// For now, allow any logged-in user to edit catalog entries
+		// if (species.createdByUserId !== userId) {
+		// 	return { ok: false, message: 'You can only edit species you contributed.' };
+		// }
+
+		const name = formTrimmed(formData, 'name');
+		const scientificName = formTrimmed(formData, 'scientificName');
+		const description = formTrimmed(formData, 'description');
+		const careTips = formTrimmed(formData, 'careTips');
+		const lightRequirement = formTrimmed(formData, 'lightRequirement') as
+			| 'low'
+			| 'medium'
+			| 'bright_indirect'
+			| 'direct'
+			| undefined;
+		const humidityPreference = formTrimmed(formData, 'humidityPreference') ?? species.humidityPreference;
+		const wateringDays = formTrimmed(formData, 'recommendedWateringIntervalDays');
+		const fertilizingDays = formTrimmed(formData, 'recommendedFertilizingIntervalDays');
+
+		if (!name) {
+			return { ok: false, message: 'Species name is required.' };
+		}
+
+		const imageResult = await parseImageFromFormData(formData, 'image');
+		if (!imageResult.ok) return imageResult;
+
+		await plantRepository.updateSpecies(speciesId, {
+			name,
+			scientificName: scientificName ?? null,
+			description: description ?? null,
+			careTips: careTips ?? null,
+			recommendedWateringIntervalDays: parsePositiveInt(wateringDays, species.recommendedWateringIntervalDays),
+			recommendedFertilizingIntervalDays: parsePositiveInt(fertilizingDays, species.recommendedFertilizingIntervalDays),
+			lightRequirement: lightRequirement ?? species.lightRequirement,
+			humidityPreference
+		});
+
+		// If new image provided, add it and make it primary
+		if (imageResult.data) {
+			const newId = await plantRepository.createSpeciesImage({
+				plantSpeciesId: speciesId,
+				imageData: imageResult.data.buffer,
+				mimeType: imageResult.data.mimeType,
+				uploadedByUserId: userId,
+				isPrimary: false
+			});
+			await plantRepository.setPrimarySpeciesImage(speciesId, newId);
+		}
+
+		return { ok: true, data: { id: speciesId } };
+	},
+
+	async deleteSpeciesImage(userId: string, imageId: string): Promise<ServiceResult<void>> {
+		const imageInfo = await plantRepository.getSpeciesImageWithOwner(imageId);
+		if (!imageInfo) {
+			return { ok: false, message: 'Image not found or not authorized.' };
+		}
+
+		const count = await plantRepository.countSpeciesImages(imageInfo.plantSpeciesId);
+		if (count <= 1) {
+			return { ok: false, message: 'Cannot delete the last image for a species.' };
+		}
+
+		await plantRepository.deleteSpeciesImage(imageId);
+		return { ok: true, data: undefined };
+	},
+
+	async setSpeciesImagePrimary(userId: string, speciesId: string, imageId: string): Promise<ServiceResult<void>> {
+		const species = await plantRepository.findSpeciesById(speciesId);
+		if (!species) {
+			return { ok: false, message: 'Not authorized.' };
+		}
+
+		await plantRepository.setPrimarySpeciesImage(speciesId, imageId);
+		return { ok: true, data: undefined };
+	},
+
 	async uploadProgressPhotoFromForm(
 		userId: string,
 		userPlantId: string,
@@ -160,5 +247,36 @@ export const plantService = {
 		});
 
 		return { ok: true, data: { id: photoId } };
+	},
+
+	async deleteProgressPhoto(userId: string, photoId: string): Promise<ServiceResult<void>> {
+		const photoInfo = await plantRepository.getProgressPhotoWithPlantOwner(photoId);
+		if (!photoInfo || photoInfo.userId !== userId) {
+			return { ok: false, message: 'Photo not found or not authorized.' };
+		}
+		await plantRepository.deleteProgressPhoto(photoId);
+		return { ok: true, data: undefined };
+	},
+
+	async removeUserPlantCover(userId: string, userPlantId: string): Promise<ServiceResult<void>> {
+		const plant = await plantRepository.findUserPlantById(userPlantId, userId);
+		if (!plant) {
+			return { ok: false, message: 'Plant not found.' };
+		}
+		await plantRepository.clearUserPlantCover(userPlantId);
+		return { ok: true, data: undefined };
+	},
+
+	async updateUserPlant(
+		userId: string,
+		userPlantId: string,
+		updates: { nickname?: string; location?: string | null; notes?: string | null }
+	): Promise<ServiceResult<void>> {
+		const plant = await plantRepository.findUserPlantById(userPlantId, userId);
+		if (!plant) {
+			return { ok: false, message: 'Plant not found.' };
+		}
+		await plantRepository.updateUserPlant(userPlantId, updates);
+		return { ok: true, data: undefined };
 	}
 };

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, like, or } from 'drizzle-orm';
+import { and, asc, desc, eq, like, or, sql } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import {
 	plantSpecies,
@@ -63,6 +63,33 @@ export const plantRepository = {
 		return id;
 	},
 
+	async updateSpecies(id: string, input: {
+		name?: string;
+		scientificName?: string | null;
+		description?: string | null;
+		careTips?: string | null;
+		recommendedWateringIntervalDays?: number;
+		recommendedFertilizingIntervalDays?: number;
+		lightRequirement?: PlantSpeciesRow['lightRequirement'];
+		humidityPreference?: string;
+		moderationStatus?: PlantSpeciesRow['moderationStatus'];
+	}) {
+		await db.update(plantSpecies)
+			.set({
+				...(input.name !== undefined && { name: input.name }),
+				...(input.scientificName !== undefined && { scientificName: input.scientificName }),
+				...(input.description !== undefined && { description: input.description }),
+				...(input.careTips !== undefined && { careTips: input.careTips }),
+				...(input.recommendedWateringIntervalDays !== undefined && { recommendedWateringIntervalDays: input.recommendedWateringIntervalDays }),
+				...(input.recommendedFertilizingIntervalDays !== undefined && { recommendedFertilizingIntervalDays: input.recommendedFertilizingIntervalDays }),
+				...(input.lightRequirement !== undefined && { lightRequirement: input.lightRequirement }),
+				...(input.humidityPreference !== undefined && { humidityPreference: input.humidityPreference }),
+				...(input.moderationStatus !== undefined && { moderationStatus: input.moderationStatus }),
+				updatedAt: new Date()
+			})
+			.where(eq(plantSpecies.id, id));
+	},
+
 	async getPrimarySpeciesImageId(speciesId: string) {
 		const [row] = await db
 			.select({ id: plantSpeciesImages.id })
@@ -117,6 +144,44 @@ export const plantRepository = {
 			.where(eq(plantSpeciesImages.id, id))
 			.limit(1);
 		return row ?? null;
+	},
+
+	async deleteSpeciesImage(imageId: string) {
+		await db.delete(plantSpeciesImages).where(eq(plantSpeciesImages.id, imageId));
+	},
+
+	async setPrimarySpeciesImage(speciesId: string, imageId: string) {
+		// First, unset all primary for this species
+		await db.update(plantSpeciesImages)
+			.set({ isPrimary: false })
+			.where(eq(plantSpeciesImages.plantSpeciesId, speciesId));
+
+		// Then set the chosen one
+		await db.update(plantSpeciesImages)
+			.set({ isPrimary: true })
+			.where(eq(plantSpeciesImages.id, imageId));
+	},
+
+	async getSpeciesImageWithOwner(imageId: string) {
+		const [row] = await db
+			.select({
+				imageId: plantSpeciesImages.id,
+				plantSpeciesId: plantSpeciesImages.plantSpeciesId,
+				createdByUserId: plantSpecies.createdByUserId,
+			})
+			.from(plantSpeciesImages)
+			.innerJoin(plantSpecies, eq(plantSpeciesImages.plantSpeciesId, plantSpecies.id))
+			.where(eq(plantSpeciesImages.id, imageId))
+			.limit(1);
+		return row ?? null;
+	},
+
+	async countSpeciesImages(speciesId: string) {
+		const [row] = await db
+			.select({ count: sql<number>`count(*)`.as('count') })
+			.from(plantSpeciesImages)
+			.where(eq(plantSpeciesImages.plantSpeciesId, speciesId));
+		return row?.count ?? 0;
 	},
 
 	async listUserPlants(userId: string) {
@@ -236,5 +301,38 @@ export const plantRepository = {
 			.where(eq(userPlantProgressPhotos.id, id))
 			.limit(1);
 		return row ?? null;
+	},
+
+	async getProgressPhotoWithPlantOwner(photoId: string) {
+		const [row] = await db
+			.select({
+				id: userPlantProgressPhotos.id,
+				userPlantId: userPlantProgressPhotos.userPlantId,
+				userId: userPlants.userId
+			})
+			.from(userPlantProgressPhotos)
+			.innerJoin(userPlants, eq(userPlantProgressPhotos.userPlantId, userPlants.id))
+			.where(eq(userPlantProgressPhotos.id, photoId))
+			.limit(1);
+		return row ?? null;
+	},
+
+	async deleteProgressPhoto(photoId: string) {
+		await db.delete(userPlantProgressPhotos).where(eq(userPlantProgressPhotos.id, photoId));
+	},
+
+	async clearUserPlantCover(id: string) {
+		await db
+			.update(userPlants)
+			.set({ coverImage: null, coverMimeType: null, updatedAt: new Date() })
+			.where(eq(userPlants.id, id));
+	},
+
+	async updateUserPlant(id: string, updates: { nickname?: string; location?: string | null; notes?: string | null }) {
+		const set: Record<string, any> = { updatedAt: new Date() };
+		if (updates.nickname !== undefined) set.nickname = updates.nickname;
+		if (updates.location !== undefined) set.location = updates.location;
+		if (updates.notes !== undefined) set.notes = updates.notes;
+		await db.update(userPlants).set(set).where(eq(userPlants.id, id));
 	}
 };

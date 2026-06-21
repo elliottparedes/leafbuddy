@@ -25,7 +25,9 @@ export const load: PageServerLoad = async ({ params, parent }) => {
 			id: row.species.id,
 			name: row.species.name,
 			scientificName: row.species.scientificName,
-			recommendedWateringIntervalDays: row.species.recommendedWateringIntervalDays
+			recommendedWateringIntervalDays: row.species.recommendedWateringIntervalDays,
+			lightRequirement: row.species.lightRequirement,
+			humidityPreference: row.species.humidityPreference
 		},
 		schedule: row.schedule
 			? {
