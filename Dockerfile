@@ -16,6 +16,9 @@ RUN npm ci
 # Copy the rest of the source
 COPY . .
 
+# Ensure production build (important for PWA plugin, etc.)
+ENV NODE_ENV=production
+
 # Build the SvelteKit app with adapter-node
 RUN npm run build
 
