@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="LeafBuddy">
+  <rect width="32" height="32" rx="7" fill="#15803d"/>
+  <!-- Nice organic leaf shape -->
+  <path
+    fill="#ffffff"
+    d="M16 5.5 Q 8.5 10 9 18 Q 16 26.5 23 18 Q 23.5 10 16 5.5 Z"
+  />
+  <!-- Center vein -->
+  <path
+    fill="none"
+    stroke="#15803d"
+    stroke-width="1.8"
+    stroke-linecap="round"
+    d="M16 7.2 L16 24"
+  />
+  <!-- Left side vein -->
+  <path
+    fill="none"
+    stroke="#15803d"
+    stroke-width="1.4"
+    stroke-linecap="round"
+    d="M12 12 Q 15 14.5 15.5 18.5"
+  />
+  <!-- Right side vein -->
+  <path
+    fill="none"
+    stroke="#15803d"
+    stroke-width="1.4"
+    stroke-linecap="round"
+    d="M20 12 Q 17 14.5 16.5 18.5"
+  />
+</svg>
