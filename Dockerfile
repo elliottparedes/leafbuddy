@@ -8,7 +8,9 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 
 # Install all deps (including dev for build)
-RUN npm ci
+# Using || fallback because Coolify's npm + secret mounts + cross-platform lockfiles
+# can sometimes cause strict "sync" errors even after clean npm install.
+RUN npm ci --no-audit --no-fund || npm install --no-audit --no-fund
 
 # Copy source
 COPY . .
