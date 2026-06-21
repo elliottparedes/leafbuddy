@@ -1,0 +1,37 @@
+# Dependencies
+node_modules
+
+# Build output (we rebuild in Docker)
+build
+.svelte-kit
+
+# Git
+.git
+.gitignore
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+app.log
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Documentation & misc
+README.md
+*.md
+.vscode
+.idea
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test / dev only
+coverage
+.nyc_output

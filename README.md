@@ -100,11 +100,42 @@ Visit [http://localhost:5173](http://localhost:5173). Register or log in and sta
 
 The app uses `@sveltejs/adapter-node`.
 
+### Standard (Node)
 1. Build: `npm run build`
 2. Set `DATABASE_URL` (and any other required env vars) on your host.
 3. Run the server: `node build` (or use your platform's start command).
 
 Works great on Railway, Render, Fly.io, a VPS, etc.
+
+### Docker
+A `Dockerfile` (multi-stage) and `.dockerignore` are included for easy containerized deployment.
+
+```sh
+# Build the image
+docker build -t leafbuddy .
+
+# Run (pass your env vars)
+docker run -p 3000:3000 \
+  -e DATABASE_URL="mysql://..." \
+  -e AUTH_SECRET="..." \
+  -e VAPID_PUBLIC_KEY="..." \
+  -e VAPID_PRIVATE_KEY="..." \
+  leafbuddy
+```
+
+The container exposes port 3000 by default (override with `PORT` env if needed).
+
+You can also use Docker Compose with a separate MySQL service for full stack.
+
+### Environment Variables
+Required for production:
+- `DATABASE_URL`
+- `AUTH_SECRET` (for auth)
+- VAPID keys for push notifications (see `.env.example`)
+
+Optional:
+- `PORT` (default 3000)
+- `CRON_SECRET` (if using the cron endpoints)
 
 ## 🧪 Development Notes
 
