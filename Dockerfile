@@ -1,51 +1,36 @@
 # syntax=docker/dockerfile:1
 
-# ==========================================
-# Build stage
-# ==========================================
+# Multi-stage build modeled after Inkstream (proven with Coolify)
 FROM node:20-alpine AS builder
-
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY package*.json ./
+# Copy lockfiles first for layer caching
+COPY package.json package-lock.json ./
 
-# Install all dependencies (needed for build)
+# Install all deps (including dev for build)
 RUN npm ci
 
-# Copy the rest of the source
+# Copy source
 COPY . .
 
-# Ensure production build (important for PWA plugin, etc.)
+# Production build (PWA plugin etc. need this)
 ENV NODE_ENV=production
-
-# Build the SvelteKit app with adapter-node
-RUN npm run build
+RUN npm run build && npm prune --omit=dev
 
 # ==========================================
-# Production runtime stage
+# Runtime image (no second npm ci — use pruned node_modules from builder)
 # ==========================================
-FROM node:20-alpine AS runner
-
+FROM node:20-alpine
 WORKDIR /app
 
-# Set production environment
 ENV NODE_ENV=production
 ENV PORT=3000
 
-# Copy only what we need from builder
+# Copy only what's needed
+COPY package.json package-lock.json ./
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/build ./build
-COPY --from=builder /app/package*.json ./
 
-# Install only production dependencies
-RUN npm ci --omit=dev
-
-# Expose the port the app runs on
 EXPOSE 3000
 
-# Healthcheck (optional but useful for orchestration)
-HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (r) => { process.exit(r.statusCode === 200 ? 0 : 1) })" || exit 1
-
-# Start the server
 CMD ["node", "build"]
