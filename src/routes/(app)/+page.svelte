@@ -47,6 +47,8 @@
 		show: boolean;
 	}>>({});
 
+	let rawFiles: Record<string, File> = {};
+
 	let photoInputs = $state<Record<string, HTMLInputElement | null>>({});
 
 	// Edit dialog state (shared)
@@ -95,6 +97,7 @@
 		const file = input.files?.[0];
 		if (file) {
 			log(`Photo selected for plant ${plantId}: ${file.name} (${file.size} bytes)`);
+			rawFiles[plantId] = file;
 			uploadPrompts[plantId] = { file, caption: '', show: true };
 		}
 		input.value = '';
@@ -102,22 +105,24 @@
 
 	function cancelUpload(plantId: string) {
 		log(`Cancel add photo for plant ${plantId}`);
+		delete rawFiles[plantId];
 		uploadPrompts[plantId] = { file: null, caption: '', show: false };
 	}
 
 	function submitUpload(plantId: string) {
 		const prompt = uploadPrompts[plantId];
-		if (!prompt?.file) return;
+		const file = rawFiles[plantId] || prompt?.file;
+		if (!file) return;
 
 		log(`Manually submitting upload for plant ${plantId}`);
 
 		const fd = new FormData();
 		fd.append('id', plantId);
-		fd.append('photo', prompt.file);
-		if (prompt.caption) fd.append('caption', prompt.caption);
+		fd.append('photo', file);
+		if (prompt?.caption) fd.append('caption', prompt.caption);
 
 		// Fetch to the action URL so SvelteKit invokes the named action
-		fetch(window.location.href + '?/uploadPhoto', {
+		fetch('/?/uploadPhoto', {
 			method: 'POST',
 			body: fd,
 			headers: {
@@ -130,26 +135,31 @@
 				result = deserialize(text);
 			} catch (err) {
 				toast.error('Upload failed with an unknown error.');
+				delete rawFiles[plantId];
 				uploadPrompts[plantId] = { file: null, caption: '', show: false };
 				return;
 			}
 			
 			if (result.type === 'success' || result.type === 'redirect') {
 				log('Upload response ok, reloading to see new photo in carousel');
+				delete rawFiles[plantId];
 				uploadPrompts[plantId] = { file: null, caption: '', show: false };
 				window.location.reload();
 			} else if (result.type === 'failure') {
 				log('Upload response not ok: ' + (result.data?.message || 'unknown failure'));
 				toast.error(result.data?.message || 'Failed to upload photo');
+				delete rawFiles[plantId];
 				uploadPrompts[plantId] = { file: null, caption: '', show: false };
 			} else {
 				log('Upload response not ok: ' + result.type);
 				toast.error('Failed to upload photo');
+				delete rawFiles[plantId];
 				uploadPrompts[plantId] = { file: null, caption: '', show: false };
 			}
 		}).catch(err => {
 			log('Upload error', err);
 			toast.error('Upload error occurred');
+			delete rawFiles[plantId];
 			uploadPrompts[plantId] = { file: null, caption: '', show: false };
 		});
 	}
