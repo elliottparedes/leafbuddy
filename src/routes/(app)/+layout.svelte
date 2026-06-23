@@ -1,5 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
 	import { Badge } from '$lib/components/ui/badge/index.js';
 	import BellIcon from '@lucide/svelte/icons/bell';
@@ -15,6 +18,8 @@
 		{ href: '/notifications', label: 'Notifications', icon: BellIcon },
 		{ href: '/settings', label: 'Settings', icon: SettingsIcon }
 	];
+
+	const mobileNavItems = navItems.filter((item) => item.href !== '/notifications');
 
 	function isActive(href: string) {
 		if (href === '/') return page.url.pathname === '/';
@@ -50,20 +55,66 @@
 					<p class="text-sm font-semibold text-foreground">Plant care companion</p>
 				</div>
 			</div>
-			<a
-				href="/notifications"
-				class="relative inline-flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-				aria-label="Notifications"
-			>
-				<BellIcon class="size-5" />
-				{#if data.unreadCount > 0}
-					<Badge
-						class="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full p-0 text-[10px]"
-					>
-						{data.unreadCount > 9 ? '9+' : data.unreadCount}
-					</Badge>
-				{/if}
-			</a>
+			<DropdownMenu.Root>
+				<DropdownMenu.Trigger class="relative inline-flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+					<BellIcon class="size-5" />
+					{#if data.unreadCount > 0}
+						<Badge class="absolute -top-0.5 -right-0.5 flex size-5 items-center justify-center rounded-full p-0 text-[10px]">
+							{data.unreadCount > 9 ? '9+' : data.unreadCount}
+						</Badge>
+					{/if}
+				</DropdownMenu.Trigger>
+				<DropdownMenu.Content class="w-80" align="end">
+					<div class="flex items-center justify-between px-4 py-3 border-b">
+						<span class="font-semibold text-sm">Notifications</span>
+						{#if data.notifications.some((n) => !n.readAt)}
+							<form method="POST" action="/notifications?/markAllRead" use:enhance>
+								<button type="submit" class="text-xs text-primary hover:underline font-medium">
+									Read all
+								</button>
+							</form>
+						{/if}
+					</div>
+					{#if data.notifications.length === 0}
+						<div class="p-8 text-center text-sm text-muted-foreground">
+							<BellIcon class="mx-auto mb-2 size-6 opacity-50" />
+							No notifications yet
+						</div>
+					{:else}
+						<div class="max-h-[60vh] overflow-y-auto">
+							{#each data.notifications as notification}
+								<form
+									method="POST"
+									action="/notifications?/markRead"
+									use:enhance={() => {
+										return async ({ update }) => {
+											await update({ reset: false });
+											if (notification.relatedUserPlantId) {
+												goto(`/my-plants/${notification.relatedUserPlantId}`);
+											}
+										};
+									}}
+								>
+									<input type="hidden" name="id" value={notification.id} />
+									<button type="submit" class="w-full text-left p-4 hover:bg-muted transition-colors flex gap-3 border-b last:border-0 relative {notification.readAt ? 'opacity-70' : ''}">
+										<div class="flex-1">
+											<div class="flex items-start justify-between gap-1 mb-1">
+												<span class="text-sm font-medium {notification.readAt ? '' : 'text-foreground'}">
+													{notification.title}
+												</span>
+												{#if !notification.readAt}
+													<span class="flex size-2 mt-1.5 shrink-0 rounded-full bg-primary"></span>
+												{/if}
+											</div>
+											<p class="text-xs text-muted-foreground line-clamp-2">{notification.body}</p>
+										</div>
+									</button>
+								</form>
+							{/each}
+						</div>
+					{/if}
+				</DropdownMenu.Content>
+			</DropdownMenu.Root>
 		</div>
 	</header>
 
@@ -73,8 +124,8 @@
 
 	<!-- Mobile bottom nav (app drawer style - only on mobile) -->
 	<nav class="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-lg border-t border-border/60 bg-background/95 backdrop-blur">
-		<div class="grid grid-cols-4 gap-1 px-2 py-2">
-			{#each navItems as item (item.href)}
+		<div class="grid grid-cols-3 gap-1 px-2 py-2">
+			{#each mobileNavItems as item (item.href)}
 				<a
 					href={item.href}
 					class="flex flex-col items-center gap-1 rounded-lg px-2 py-2 text-xs transition-colors {isActive(item.href)
