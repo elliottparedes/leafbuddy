@@ -158,7 +158,6 @@
 		bind:this={photoInput}
 		type="file"
 		accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
-		capture="environment"
 		onchange={onPhotoSelected}
 		style="display: none"
 	/>

@@ -76,7 +76,7 @@
 					</Select>
 				</div>
 				<div class="space-y-2">
-					<Label for="image">Reference photo (max 5MB)</Label>
+					<Label for="image">Reference photo (max 20MB)</Label>
 					<Input id="image" name="image" type="file" accept="image/*" required />
 				</div>
 				<Button type="submit" class="w-full">Submit for review</Button>

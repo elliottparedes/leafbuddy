@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance, deserialize } from '$app/forms';
+	import type { ActionResult } from '@sveltejs/kit';
+	import { toast } from 'svelte-sonner';
 	import type { PageData } from './$types';
 	import { formatWateringDue, formatRelativeDate } from '$lib/format';
 	import { log } from '$lib/log';
@@ -117,18 +119,37 @@
 		// Fetch to the action URL so SvelteKit invokes the named action
 		fetch(window.location.href + '?/uploadPhoto', {
 			method: 'POST',
-			body: fd
-		}).then(res => {
-			if (res.ok) {
+			body: fd,
+			headers: {
+				'x-sveltekit-action': 'true'
+			}
+		}).then(async res => {
+			const text = await res.text();
+			let result: ActionResult;
+			try {
+				result = deserialize(text);
+			} catch (err) {
+				toast.error('Upload failed with an unknown error.');
+				uploadPrompts[plantId] = { file: null, caption: '', show: false };
+				return;
+			}
+			
+			if (result.type === 'success' || result.type === 'redirect') {
 				log('Upload response ok, reloading to see new photo in carousel');
 				uploadPrompts[plantId] = { file: null, caption: '', show: false };
 				window.location.reload();
+			} else if (result.type === 'failure') {
+				log('Upload response not ok: ' + (result.data?.message || 'unknown failure'));
+				toast.error(result.data?.message || 'Failed to upload photo');
+				uploadPrompts[plantId] = { file: null, caption: '', show: false };
 			} else {
-				log('Upload response not ok: ' + res.status);
+				log('Upload response not ok: ' + result.type);
+				toast.error('Failed to upload photo');
 				uploadPrompts[plantId] = { file: null, caption: '', show: false };
 			}
 		}).catch(err => {
 			log('Upload error', err);
+			toast.error('Upload error occurred');
 			uploadPrompts[plantId] = { file: null, caption: '', show: false };
 		});
 	}
@@ -381,7 +402,6 @@
 						bind:this={photoInputs[plant.id]} 
 						type="file" 
 						accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
-						capture="environment"
 						onchange={(e) => onPhotoSelected(e, plant.id)}
 						style="display: none"
 					/>

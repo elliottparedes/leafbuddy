@@ -171,7 +171,7 @@
 					</Select>
 				</div>
 				<div class="space-y-2">
-					<Label for="image">Add new reference photo (optional, max 5MB)</Label>
+					<Label for="image">Add new reference photo (optional, max 20MB)</Label>
 					<Input id="image" name="image" type="file" accept="image/*" />
 					<p class="text-xs text-muted-foreground">New photo will be added (you can set it as primary after).</p>
 				</div>

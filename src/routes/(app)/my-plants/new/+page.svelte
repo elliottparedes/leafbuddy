@@ -186,13 +186,12 @@
 				</div>
 
 				<div class="space-y-2">
-					<Label for="coverImage">Cover photo (max 5MB)</Label>
+					<Label for="coverImage">Cover photo (max 20MB)</Label>
 					<Input 
 						id="coverImage" 
 						name="coverImage" 
 						type="file" 
 						accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif" 
-						capture="environment"
 						onchange={(e) => {
 						const file = (e.target as HTMLInputElement).files?.[0];
 						if (file) {

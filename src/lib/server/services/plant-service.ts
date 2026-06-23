@@ -4,7 +4,7 @@ import type { ServiceResult } from '$lib/server/services/result';
 import { wateringService } from '$lib/server/services/watering-service';
 import { formTrimmed } from '$lib/server/validation/form';
 
-export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+export const MAX_IMAGE_SIZE = 20 * 1024 * 1024;
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
 
