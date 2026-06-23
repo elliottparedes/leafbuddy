@@ -27,7 +27,7 @@ WORKDIR /app
 
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV BODY_SIZE_LIMIT=0
+ENV BODY_SIZE_LIMIT=Infinity
 
 # Copy only what's needed
 COPY package.json package-lock.json ./
