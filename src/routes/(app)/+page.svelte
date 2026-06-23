@@ -66,6 +66,11 @@
 	let confirmDescription = $state('');
 	let pendingPhotoRemoval: { plantId: string; curr: any } | null = $state(null);
 
+	// Delete plant confirmation
+	let deleteConfirmOpen = $state(false);
+	let pendingDeleteId = $state('');
+	let pendingDeleteName = $state('');
+
 	$effect(() => {
 		for (const p of data.plants) {
 			if (!carouselIndices[p.id]) {
@@ -201,6 +206,39 @@
 		if (len <= 1) return;
 		carouselIndices[plantId] = (cidx + 1) % len;
 	}
+
+	function requestDeletePlant(plantId: string, plantName: string) {
+		pendingDeleteId = plantId;
+		pendingDeleteName = plantName;
+		deleteConfirmOpen = true;
+	}
+
+	async function performDeletePlant() {
+		if (!pendingDeleteId) return;
+
+		log(`Delete plant ${pendingDeleteId}`);
+
+		const fd = new FormData();
+		fd.append('id', pendingDeleteId);
+
+		try {
+			const res = await fetch(window.location.href + '?/deletePlant', {
+				method: 'POST',
+				body: fd
+			});
+			if (res.ok) {
+				log('Delete plant ok, reloading');
+				window.location.reload();
+			} else {
+				log('Delete plant failed: ' + res.status);
+			}
+		} catch (err) {
+			log('Delete plant error', err);
+		} finally {
+			pendingDeleteId = '';
+			pendingDeleteName = '';
+		}
+	}
 </script>
 
 <div class="space-y-4">
@@ -234,8 +272,8 @@
 	{:else}
 		<div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
 			{#each data.plants as plant (plant.id)}
-				{@const watering = formatWateringDue(plant.nextWaterAt)}
-				{@const canMarkWatered = watering.status === 'overdue' || watering.status === 'due_today'}
+			{@const watering = formatWateringDue(plant.nextWaterAt)}
+			{@const canMarkWatered = watering.status === 'overdue' || watering.status === 'due_today' || watering.status === 'due_now'}
 				{@const imgs = [
 					...(plant.hasCoverImage ? [{ type: 'cover', src: `/api/images/plant/${plant.id}` }] : []),
 					...(plant.progressPhotos || []).map((pp) => ({
@@ -274,6 +312,8 @@
 										src={curr.src}
 										alt={plant.nickname}
 										class="size-full object-cover pointer-events-none"
+										loading="lazy"
+										decoding="async"
 									/>
 								</div>
 								<!-- Prev / Next arrows (visible on hover, desktop friendly) -->
@@ -336,14 +376,15 @@
 							</Button>
 						</div>
 
-						<!-- Hidden picker input -->
-						<input 
-							bind:this={photoInputs[plant.id]} 
-							type="file" 
-							accept="image/*" 
-							onchange={(e) => onPhotoSelected(e, plant.id)}
-							style="display: none"
-						/>
+					<!-- Hidden picker input -->
+					<input 
+						bind:this={photoInputs[plant.id]} 
+						type="file" 
+						accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
+						capture="environment"
+						onchange={(e) => onPhotoSelected(e, plant.id)}
+						style="display: none"
+					/>
 
 						<!-- Upload prompt -->
 						{#if uploadPrompts[plant.id]?.show && uploadPrompts[plant.id].file}
@@ -392,12 +433,14 @@
 						<div>
 							<div class="flex items-center gap-2 text-sm">
 								<DropletsIcon class="size-4 text-primary" />
-								<span>{watering.label}</span>
-								{#if watering.status === 'overdue'}
-									<Badge variant="destructive">Overdue</Badge>
-								{:else if watering.status === 'due_today'}
-									<Badge>Today</Badge>
-								{/if}
+							<span>{watering.label}</span>
+							{#if watering.status === 'overdue'}
+								<Badge variant="destructive">Overdue</Badge>
+							{:else if watering.status === 'due_now'}
+								<Badge variant="default">Due now</Badge>
+							{:else if watering.status === 'due_today'}
+								<Badge>Today</Badge>
+							{/if}
 							</div>
 							{#if plant.lastWateredAt}
 								<p class="text-xs text-muted-foreground">Last watered {formatRelativeDate(plant.lastWateredAt)}</p>
@@ -489,9 +532,23 @@
 				</div>
 			</div>
 
-			<Dialog.Footer>
-				<Button type="button" variant="ghost" onclick={() => (editOpen = false)}>Cancel</Button>
-				<Button type="submit">Save changes</Button>
+			<Dialog.Footer class="flex justify-between">
+				<Button 
+					type="button" 
+					variant="ghost" 
+					class="text-destructive hover:text-destructive hover:bg-destructive/10"
+					onclick={() => {
+						editOpen = false;
+						requestDeletePlant(editId, editNickname);
+					}}
+				>
+					<Trash2Icon class="size-4 mr-1" />
+					Delete
+				</Button>
+				<div class="flex gap-2">
+					<Button type="button" variant="ghost" onclick={() => (editOpen = false)}>Cancel</Button>
+					<Button type="submit">Save changes</Button>
+				</div>
 			</Dialog.Footer>
 		</form>
 	</Dialog.Content>
@@ -504,4 +561,13 @@
 	description={confirmDescription}
 	confirmText="Remove"
 	onConfirm={performPhotoRemoval}
+/>
+
+<!-- Delete plant confirmation modal -->
+<ConfirmDialog
+	bind:open={deleteConfirmOpen}
+	title="Delete plant?"
+	description={`"${pendingDeleteName}" and all its photos will be permanently deleted.`}
+	confirmText="Delete"
+	onConfirm={performDeletePlant}
 />

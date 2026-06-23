@@ -26,7 +26,7 @@ export function formatRelativeDate(date: Date | string | null | undefined, now =
 	});
 }
 
-export type WateringDueStatus = 'overdue' | 'due_today' | 'upcoming' | 'none';
+export type WateringDueStatus = 'overdue' | 'due_today' | 'due_now' | 'upcoming' | 'none';
 
 /** Format next watering with urgency context. */
 export function formatWateringDue(
@@ -41,16 +41,22 @@ export function formatWateringDue(
 	const diffMs = target.getTime() - now.getTime();
 	const diffDays = Math.round((startOfDay(target).getTime() - startOfDay(now).getTime()) / DAY_MS);
 
-	if (diffMs < 0) {
-		const overdueDays = Math.abs(diffDays) || 1;
+	// Due today (same calendar day)
+	if (diffDays === 0) {
+		// If it's in the past or very close (within same day), show as due now
+		if (diffMs < 0) {
+			return { label: 'Due now', status: 'due_now' };
+		}
+		return { label: 'Water today', status: 'due_today' };
+	}
+
+	// Actually overdue (past days)
+	if (diffDays < 0) {
+		const overdueDays = Math.abs(diffDays);
 		return {
 			label: overdueDays === 1 ? 'Overdue since yesterday' : `Overdue by ${overdueDays} days`,
 			status: 'overdue'
 		};
-	}
-
-	if (diffDays === 0) {
-		return { label: 'Water today', status: 'due_today' };
 	}
 
 	if (diffDays === 1) {

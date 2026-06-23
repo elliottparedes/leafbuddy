@@ -13,6 +13,7 @@
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
 		"db:seed": "tsx drizzle/seed/plants.ts",
+		"db:seed:images": "tsx drizzle/seed/seed-images.ts",
 		"generate-icons": "node scripts/generate-icons.mjs",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",

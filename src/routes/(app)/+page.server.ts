@@ -179,5 +179,22 @@ export const actions: Actions = {
 		}
 
 		redirect(303, '/');
+	},
+
+	deletePlant: async ({ request, locals }) => {
+		const session = await locals.auth();
+		if (!session?.user?.id) redirect(303, '/login');
+
+		const formData = await request.formData();
+		const id = formData.get('id')?.toString();
+		if (!id) return;
+
+		await log(`Delete plant ${id}`);
+		const result = await plantService.deleteUserPlant(session.user.id, id);
+		if (!result.ok) {
+			return failIfError(result);
+		}
+
+		redirect(303, '/');
 	}
 };

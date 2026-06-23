@@ -334,5 +334,19 @@ export const plantRepository = {
 		if (updates.location !== undefined) set.location = updates.location;
 		if (updates.notes !== undefined) set.notes = updates.notes;
 		await db.update(userPlants).set(set).where(eq(userPlants.id, id));
+	},
+
+	async deleteUserPlant(id: string, userId: string) {
+		// First delete related records
+		await db.delete(userPlantProgressPhotos).where(
+			eq(userPlantProgressPhotos.userPlantId, id)
+		);
+		await db.delete(wateringSchedules).where(
+			eq(wateringSchedules.userPlantId, id)
+		);
+		// Then delete the plant
+		await db.delete(userPlants).where(
+			and(eq(userPlants.id, id), eq(userPlants.userId, userId))
+		);
 	}
 };

@@ -49,6 +49,8 @@
 										src="/api/images/species/{species.imageId}"
 										alt={species.name}
 										class="size-full object-cover"
+										loading="lazy"
+										decoding="async"
 									/>
 								{:else}
 									<div class="flex size-full items-center justify-center text-primary/50">

@@ -48,11 +48,9 @@ export const wateringService = {
 			input.customIntervalDays,
 			input.recommendedIntervalDays
 		);
-		const nextWaterAt = computeNextWaterAt({
-			lastWateredAt: null,
-			intervalDays,
-			preferredTime: input.preferredTime ?? '09:00'
-		});
+		// When plant is first added, it's eligible for watering immediately
+		// so user can mark it as watered to start the schedule
+		const nextWaterAt = new Date();
 
 		const id = crypto.randomUUID();
 		await db.insert(wateringSchedules).values({

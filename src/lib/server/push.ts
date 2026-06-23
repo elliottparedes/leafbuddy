@@ -22,6 +22,11 @@ export type PushPayload = {
 	body: string;
 	url?: string;
 	notificationId?: string;
+	plantId?: string;
+	actions?: Array<{ action: string; title: string }>;
+	tag?: string;
+	requireInteraction?: boolean;
+	renotify?: boolean;
 };
 
 export async function sendPushNotification(

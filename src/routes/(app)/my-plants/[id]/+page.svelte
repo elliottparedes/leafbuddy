@@ -40,7 +40,7 @@
 	});
 
 	const watering = $derived(formatWateringDue(data.schedule?.nextWaterAt ?? null));
-	const canMarkWatered = $derived(watering.status === 'overdue' || watering.status === 'due_today');
+	const canMarkWatered = $derived(watering.status === 'overdue' || watering.status === 'due_today' || watering.status === 'due_now');
 
 	$effect(() => {
 		if (form?.success) {
@@ -154,10 +154,11 @@
 	</div>
 
 	<!-- Hidden file input for progress photo upload -->
-	<input 
-		bind:this={photoInput} 
-		type="file" 
-		accept="image/*" 
+	<input
+		bind:this={photoInput}
+		type="file"
+		accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif"
+		capture="environment"
 		onchange={onPhotoSelected}
 		style="display: none"
 	/>
@@ -234,11 +235,13 @@
 				{#if data.schedule?.lastWateredAt}
 					<span>Last watered {formatRelativeDate(data.schedule.lastWateredAt)}</span>
 				{/if}
-				{#if watering.status === 'overdue'}
-					<Badge variant="destructive">Overdue</Badge>
-				{:else if watering.status === 'due_today'}
-					<Badge>Due today</Badge>
-				{/if}
+			{#if watering.status === 'overdue'}
+								<Badge variant="destructive">Overdue</Badge>
+							{:else if watering.status === 'due_now'}
+								<Badge variant="default">Due now</Badge>
+							{:else if watering.status === 'due_today'}
+								<Badge>Due today</Badge>
+							{/if}
 			</div>
 
 			<form method="POST" action="?/markWatered" use:enhance={() => {

@@ -6,7 +6,28 @@ import { formTrimmed } from '$lib/server/validation/form';
 
 export const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
-const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
+
+function getMimeTypeFromFileName(fileName: string): string {
+	const ext = fileName.toLowerCase().split('.').pop();
+	switch (ext) {
+		case 'jpg':
+		case 'jpeg':
+			return 'image/jpeg';
+		case 'png':
+			return 'image/png';
+		case 'webp':
+			return 'image/webp';
+		case 'gif':
+			return 'image/gif';
+		case 'heic':
+			return 'image/heic';
+		case 'heif':
+			return 'image/heif';
+		default:
+			return 'image/jpeg';
+	}
+}
 
 export async function parseImageFromFormData(
 	formData: FormData,
@@ -21,9 +42,14 @@ export async function parseImageFromFormData(
 		return { ok: false, message: 'Image must be 5MB or smaller.' };
 	}
 
-	const mimeType = file.type || 'image/jpeg';
+	// Use file.type if available, otherwise infer from filename
+	let mimeType = file.type;
+	if (!mimeType || mimeType === 'application/octet-stream') {
+		mimeType = getMimeTypeFromFileName(file.name);
+	}
+
 	if (!ALLOWED_IMAGE_TYPES.has(mimeType)) {
-		return { ok: false, message: 'Image must be JPEG, PNG, WebP, or GIF.' };
+		return { ok: false, message: 'Image must be JPEG, PNG, WebP, GIF, or HEIC.' };
 	}
 
 	const buffer = Buffer.from(await file.arrayBuffer());
@@ -277,6 +303,15 @@ export const plantService = {
 			return { ok: false, message: 'Plant not found.' };
 		}
 		await plantRepository.updateUserPlant(userPlantId, updates);
+		return { ok: true, data: undefined };
+	},
+
+	async deleteUserPlant(userId: string, userPlantId: string): Promise<ServiceResult<void>> {
+		const plant = await plantRepository.findUserPlantById(userPlantId, userId);
+		if (!plant) {
+			return { ok: false, message: 'Plant not found.' };
+		}
+		await plantRepository.deleteUserPlant(userPlantId, userId);
 		return { ok: true, data: undefined };
 	}
 };
