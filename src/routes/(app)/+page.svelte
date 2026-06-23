@@ -286,8 +286,8 @@
 				]}
 				{@const cidx = carouselIndices[plant.id] ?? 0}
 				{@const curr = imgs[cidx]}
-				<Card class="overflow-hidden">
-					<div class="p-3 space-y-3">
+				<Card class="overflow-hidden flex flex-col h-full">
+					<div class="p-3 flex flex-col flex-1 gap-3">
 						<!-- Carousel for images -->
 						<div class="relative aspect-video overflow-hidden rounded-xl bg-muted group">
 							{#if curr}
@@ -447,27 +447,29 @@
 							{/if}
 						</div>
 
-						<!-- Mark as watered -->
-						<form method="POST" action="?/markWatered" use:enhance>
-							<input type="hidden" name="id" value={plant.id} />
-							<Button
-								type="submit"
-								size="sm"
-								class="w-full"
-								disabled={!canMarkWatered}
-								title={!canMarkWatered ? 'Not due for watering yet' : null}
-							>
-								<DropletsIcon class="size-4" />
-								Mark as watered
-							</Button>
-						</form>
-
 						{#if plant.notes}
 							<div class="text-xs">
 								<div class="font-medium text-muted-foreground">Notes</div>
 								<p class="whitespace-pre-wrap text-muted-foreground">{plant.notes}</p>
 							</div>
 						{/if}
+
+						<div class="mt-auto pt-1">
+							<!-- Mark as watered -->
+							<form method="POST" action="?/markWatered" use:enhance>
+								<input type="hidden" name="id" value={plant.id} />
+								<Button
+									type="submit"
+									size="sm"
+									class="w-full"
+									disabled={!canMarkWatered}
+									title={!canMarkWatered ? 'Not due for watering yet' : null}
+								>
+									<DropletsIcon class="size-4" />
+									Mark as watered
+								</Button>
+							</form>
+						</div>
 					</div>
 				</Card>
 			{/each}
@@ -532,11 +534,10 @@
 				</div>
 			</div>
 
-			<Dialog.Footer class="flex justify-between">
+			<Dialog.Footer class="flex flex-row items-center justify-between mt-4">
 				<Button 
 					type="button" 
-					variant="ghost" 
-					class="text-destructive hover:text-destructive hover:bg-destructive/10"
+					variant="destructive" 
 					onclick={() => {
 						editOpen = false;
 						requestDeletePlant(editId, editNickname);
@@ -545,9 +546,9 @@
 					<Trash2Icon class="size-4 mr-1" />
 					Delete
 				</Button>
-				<div class="flex gap-2">
+				<div class="flex items-center gap-2">
 					<Button type="button" variant="ghost" onclick={() => (editOpen = false)}>Cancel</Button>
-					<Button type="submit">Save changes</Button>
+					<Button type="submit">Save</Button>
 				</div>
 			</Dialog.Footer>
 		</form>
